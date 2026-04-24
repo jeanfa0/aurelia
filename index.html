@@ -1,1032 +1,605 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aurelia · Spa & Centro Médico</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600&family=Jost:wght@200;300;400&display=swap" rel="stylesheet" />
-
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aurelia — Centro Médico & Spa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Mulish:wght@200;300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
-    /* ── TOKENS ── */
-    :root {
-      --cream:    #F5EFE6;
-      --pearl:    #EDE5D8;
-      --warm:     #C8A97A;
-      --gold:     #B8893E;
-      --deep:     #2B2016;
-      --charcoal: #3A2F22;
-      --fog:      #9B8E80;
-      --white:    #FDFAF6;
-      --err:      #c0392b;
-      --ok:       #27ae60;
+    :root{
+      --cream:#F9F5F0;
+      --cream-dark:#F0EAE0;
+      --gold:#C5A059;
+      --gold-light:#DFC08A;
+      --gold-pale:#F5EEDA;
+      --charcoal:#2D2D2D;
+      --c60:rgba(45,45,45,.6);
+      --c30:rgba(45,45,45,.3);
+      --c10:rgba(45,45,45,.07);
+      --white:#FFFFFF;
+      --sage-pale:#E8EEE6;
+      --border:rgba(197,160,89,.22);
+      --sh-sm:0 4px 24px rgba(45,45,45,.07);
+      --sh-md:0 12px 48px rgba(45,45,45,.10);
+      --sh-lg:0 24px 72px rgba(45,45,45,.12);
     }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Mulish',sans-serif;background:var(--cream);color:var(--charcoal);overflow-x:hidden}
+    a{text-decoration:none;color:inherit}ul{list-style:none}img{display:block;max-width:100%}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--cream-dark)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-    html { scroll-behavior: smooth; font-size: 16px; }
-
-    body {
-      background: var(--deep);
-      color: var(--cream);
-      font-family: 'Jost', sans-serif;
-      font-weight: 300;
-      overflow-x: hidden;
-    }
-
-    /* ── CUSTOM CURSOR ── */
-    * { cursor: none !important; }
-    #cursor {
-      position: fixed; width: 10px; height: 10px;
-      border-radius: 50%; background: var(--gold);
-      pointer-events: none; z-index: 9999;
-      transform: translate(-50%,-50%);
-      transition: transform .15s ease, background .2s;
-    }
-    #cursor-ring {
-      position: fixed; width: 36px; height: 36px;
-      border-radius: 50%; border: 1px solid var(--warm);
-      pointer-events: none; z-index: 9998;
-      transform: translate(-50%,-50%);
-      transition: transform .35s cubic-bezier(.25,.46,.45,.94), opacity .3s;
-    }
+    .reveal{opacity:0;transform:translateY(26px);transition:opacity .75s ease,transform .75s ease}
+    .reveal.up{opacity:1;transform:translateY(0)}
+    .rd1{transition-delay:.12s}.rd2{transition-delay:.24s}.rd3{transition-delay:.36s}
 
     /* ── NAV ── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1.6rem 4rem;
-      background: linear-gradient(to bottom, rgba(43,32,22,.92), transparent);
-      backdrop-filter: blur(2px);
-      transition: background .4s;
-    }
-    nav.scrolled { background: rgba(43,32,22,.97); }
-
-    .nav-logo {
-      font-family: 'Cinzel', serif;
-      font-size: 1.5rem; letter-spacing: .18em;
-      color: var(--warm);
-      text-decoration: none;
-    }
-    .nav-logo span { color: var(--gold); }
-
-    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
-    .nav-links a {
-      font-family: 'Jost', sans-serif; font-weight: 200; font-size: .8rem;
-      letter-spacing: .2em; text-transform: uppercase; color: var(--cream);
-      text-decoration: none; position: relative; transition: color .3s;
-    }
-    .nav-links a::after {
-      content: ''; position: absolute; left: 0; bottom: -3px;
-      width: 0; height: 1px; background: var(--gold);
-      transition: width .4s ease;
-    }
-    .nav-links a:hover { color: var(--warm); }
-    .nav-links a:hover::after { width: 100%; }
-
-    .nav-cta {
-      font-family: 'Jost', sans-serif; font-size: .75rem; font-weight: 300;
-      letter-spacing: .25em; text-transform: uppercase;
-      border: 1px solid var(--gold); color: var(--gold);
-      padding: .6rem 1.6rem; text-decoration: none;
-      transition: background .3s, color .3s;
-    }
-    .nav-cta:hover { background: var(--gold); color: var(--deep); }
+    nav{position:fixed;top:0;left:0;right:0;z-index:200;height:74px;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;background:rgba(249,245,240,.93);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--border);transition:box-shadow .3s}
+    nav.scrolled{box-shadow:var(--sh-sm)}
+    .nav-logo{font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:500;color:var(--charcoal);letter-spacing:.04em}
+    .nav-logo em{font-style:italic;color:var(--gold)}
+    .nav-links{display:flex;align-items:center;gap:2.4rem}
+    .nav-links a{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:var(--c60);transition:color .25s;position:relative}
+    .nav-links a::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:1.5px;background:var(--gold);transition:width .3s}
+    .nav-links a:hover{color:var(--charcoal)}.nav-links a:hover::after{width:100%}
+    .nav-btn{background:var(--gold) !important;color:#fff !important;padding:.5rem 1.4rem;border-radius:40px;font-weight:700 !important;box-shadow:0 4px 18px rgba(197,160,89,.3);transition:background .25s,transform .2s,box-shadow .25s !important}
+    .nav-btn::after{display:none !important}.nav-btn:hover{background:#b08d45 !important;transform:translateY(-1px);box-shadow:0 8px 28px rgba(197,160,89,.4) !important}
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+    .hamburger span{display:block;width:22px;height:1.5px;background:var(--charcoal);transition:.3s}
+    .hamburger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+    .hamburger.open span:nth-child(2){opacity:0}
+    .hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
 
     /* ── HERO ── */
-    #hero {
-      position: relative; min-height: 100vh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center; overflow: hidden;
-      padding: 0 2rem;
-    }
+    .hero{min-height:100svh;display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden;background:var(--cream)}
+    .hero-glow{position:absolute;border-radius:50%;pointer-events:none}
+    .hero-glow.g1{width:55vw;height:55vw;right:-8vw;top:-8vw;background:radial-gradient(ellipse at 40% 40%,var(--gold-pale) 0%,transparent 68%);opacity:.75}
+    .hero-glow.g2{width:28vw;height:28vw;left:-5vw;bottom:12vh;background:radial-gradient(ellipse,var(--sage-pale) 0%,transparent 70%);opacity:.6}
+    .hero-vline{position:absolute;width:1px;top:0;bottom:0;left:50%;background:var(--border);pointer-events:none}
+    .hero-left{display:flex;flex-direction:column;justify-content:center;padding:12vh 4vw 8vh 5vw;position:relative;z-index:2;animation:fadeUp .9s ease both}
+    .eyebrow{display:flex;align-items:center;gap:10px;font-size:.66rem;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:1.8rem}
+    .eyebrow::before{content:'';width:24px;height:1.5px;background:var(--gold);flex-shrink:0}
+    h1.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,5.5vw,5.4rem);font-weight:400;line-height:1.07;color:var(--charcoal);margin-bottom:1.8rem}
+    h1.hero-title em{font-style:italic;color:var(--gold)}
+    .hero-sub{font-size:1rem;color:var(--c60);line-height:1.85;font-weight:300;max-width:420px;margin-bottom:2.8rem}
+    .hero-actions{display:flex;gap:1rem;flex-wrap:wrap}
 
-    .hero-bg {
-      position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(184,137,62,.12) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 80% at 80% 20%, rgba(200,169,122,.08) 0%, transparent 60%),
-        linear-gradient(175deg, #2B2016 0%, #1A1209 60%, #0e0a05 100%);
-    }
+    .btn-gold{display:inline-flex;align-items:center;gap:.55rem;background:var(--gold);color:#fff;font-family:'Mulish',sans-serif;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;padding:.95rem 2.2rem;border:none;border-radius:40px;cursor:pointer;box-shadow:0 6px 24px rgba(197,160,89,.3);transition:background .25s,transform .2s,box-shadow .25s}
+    .btn-gold:hover{background:#b08d45;transform:translateY(-2px);box-shadow:0 10px 32px rgba(197,160,89,.4)}
+    .btn-line{display:inline-flex;align-items:center;gap:.55rem;background:transparent;border:1.5px solid var(--c30);color:var(--charcoal);font-family:'Mulish',sans-serif;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;font-weight:500;padding:.95rem 2.2rem;border-radius:40px;cursor:pointer;transition:border-color .25s,color .25s}
+    .btn-line:hover{border-color:var(--gold);color:var(--gold)}
 
-    .hero-ornament {
-      position: absolute; width: 600px; height: 600px;
-      border-radius: 50%;
-      border: 1px solid rgba(184,137,62,.15);
-      top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      animation: breathe 6s ease-in-out infinite;
-    }
-    .hero-ornament:nth-child(2) {
-      width: 800px; height: 800px;
-      border-color: rgba(184,137,62,.07);
-      animation-delay: -2s;
-    }
-    .hero-ornament:nth-child(3) {
-      width: 1000px; height: 1000px;
-      border-color: rgba(184,137,62,.04);
-      animation-delay: -4s;
-    }
+    .hero-right{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;padding:10vh 4vw 8vh}
+    .hero-card{width:100%;max-width:390px;background:var(--white);border-radius:18px;box-shadow:var(--sh-lg);overflow:hidden;animation:fadeUp 1s .3s ease both}
+    .hero-card-img{height:270px;background:linear-gradient(145deg,var(--cream-dark) 0%,var(--gold-pale) 60%,#ead8bb 100%);display:flex;align-items:center;justify-content:center;position:relative}
+    .hero-card-float{position:absolute;bottom:18px;left:18px;background:rgba(255,255,255,.88);backdrop-filter:blur(8px);border-radius:10px;padding:.65rem 1rem;font-size:.74rem;font-weight:700;color:var(--charcoal)}
+    .hero-card-body{padding:1.5rem 1.8rem;display:flex;flex-direction:column;gap:.45rem}
+    .hero-card-tag{font-size:.63rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700}
+    .hero-card-title{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:400;color:var(--charcoal)}
+    .hero-card-sub{font-size:.81rem;color:var(--c60);font-weight:300}
+    .hero-card-cta{margin-top:.6rem;font-size:.71rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;cursor:pointer;background:none;border:none;font-family:'Mulish',sans-serif;padding:0;text-align:left}
 
-    @keyframes breathe {
-      0%,100% { transform: translate(-50%,-50%) scale(1); }
-      50%      { transform: translate(-50%,-50%) scale(1.03); }
-    }
+    .hero-stat{position:absolute;background:var(--white);border-radius:12px;padding:.9rem 1.2rem;box-shadow:var(--sh-md)}
+    .hero-stat.s1{bottom:12vh;left:-1vw;animation:fadeIn 1s .8s ease both}
+    .hero-stat.s2{top:13vh;right:-1vw;animation:fadeIn 1s 1s ease both}
+    .stat-num{font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:500;color:var(--gold);line-height:1}
+    .stat-lbl{font-size:.7rem;color:var(--c60);font-weight:400;line-height:1.4;margin-top:2px}
 
-    .hero-eyebrow {
-      position: relative;
-      font-family: 'Jost', sans-serif; font-weight: 200;
-      font-size: .7rem; letter-spacing: .45em; text-transform: uppercase;
-      color: var(--warm); margin-bottom: 1.8rem;
-      display: flex; align-items: center; gap: 1.2rem;
-      animation: fadeUp .9s .2s both;
-    }
-    .hero-eyebrow::before, .hero-eyebrow::after {
-      content: ''; flex: 1; max-width: 60px; height: 1px;
-      background: linear-gradient(to right, transparent, var(--gold));
-    }
-    .hero-eyebrow::after { background: linear-gradient(to left, transparent, var(--gold)); }
+    /* ── STRIP ── */
+    .strip{background:var(--charcoal);padding:1.3rem 5vw;display:flex;align-items:center;justify-content:center;gap:2.8rem;flex-wrap:wrap}
+    .strip-item{display:flex;align-items:center;gap:.55rem;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.45);font-weight:500}
+    .strip-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0}
 
-    .hero-title {
-      position: relative;
-      font-family: 'Cinzel', serif; font-size: clamp(3.5rem, 9vw, 8rem);
-      font-weight: 400; letter-spacing: .08em; line-height: 1;
-      color: var(--cream);
-      animation: fadeUp .9s .4s both;
-    }
-    .hero-title em {
-      font-family: 'Cormorant Garamond', serif; font-style: italic;
-      font-weight: 300; color: var(--gold); font-size: 1.15em;
-    }
-
-    .hero-sub {
-      position: relative;
-      font-family: 'Cormorant Garamond', serif; font-style: italic;
-      font-size: clamp(1.1rem, 2.5vw, 1.5rem); font-weight: 300;
-      color: var(--fog); letter-spacing: .04em;
-      margin-top: 1.2rem; margin-bottom: 2.8rem;
-      animation: fadeUp .9s .6s both;
-    }
-
-    .hero-divider {
-      position: relative; width: 1px; height: 60px;
-      background: linear-gradient(to bottom, transparent, var(--gold), transparent);
-      margin: 0 auto 2.8rem;
-      animation: fadeUp .9s .7s both;
-    }
-
-    .hero-actions {
-      position: relative; display: flex; gap: 1.5rem; flex-wrap: wrap;
-      justify-content: center;
-      animation: fadeUp .9s .85s both;
-    }
-
-    .btn-primary {
-      font-family: 'Jost', sans-serif; font-size: .75rem; font-weight: 300;
-      letter-spacing: .25em; text-transform: uppercase;
-      background: var(--gold); color: var(--deep);
-      padding: 1rem 2.8rem; text-decoration: none;
-      position: relative; overflow: hidden;
-      transition: transform .3s;
-    }
-    .btn-primary::before {
-      content: ''; position: absolute; inset: 0;
-      background: var(--warm); transform: translateX(-105%);
-      transition: transform .4s cubic-bezier(.25,.46,.45,.94);
-    }
-    .btn-primary:hover::before { transform: translateX(0); }
-    .btn-primary span { position: relative; }
-
-    .btn-outline {
-      font-family: 'Jost', sans-serif; font-size: .75rem; font-weight: 300;
-      letter-spacing: .25em; text-transform: uppercase;
-      border: 1px solid rgba(200,169,122,.5); color: var(--cream);
-      padding: 1rem 2.8rem; text-decoration: none;
-      transition: border-color .3s, color .3s;
-    }
-    .btn-outline:hover { border-color: var(--warm); color: var(--warm); }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── SCROLL INDICATOR ── */
-    .scroll-hint {
-      position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
-      display: flex; flex-direction: column; align-items: center; gap: .6rem;
-      animation: fadeUp 1s 1.2s both;
-    }
-    .scroll-hint span {
-      font-size: .6rem; letter-spacing: .35em; text-transform: uppercase;
-      color: var(--fog);
-    }
-    .scroll-line {
-      width: 1px; height: 40px;
-      background: linear-gradient(to bottom, var(--gold), transparent);
-      animation: scrollPulse 2s ease-in-out infinite;
-    }
-    @keyframes scrollPulse {
-      0%,100% { transform: scaleY(1); opacity: 1; }
-      50%      { transform: scaleY(.6); opacity: .4; }
-    }
-
-    /* ── SECTION BASE ── */
-    section { padding: 7rem 4rem; }
-
-    .section-tag {
-      font-family: 'Jost', sans-serif; font-weight: 200;
-      font-size: .65rem; letter-spacing: .5em; text-transform: uppercase;
-      color: var(--gold); margin-bottom: 1rem;
-    }
-    .section-title {
-      font-family: 'Cinzel', serif; font-size: clamp(2rem, 4vw, 3.2rem);
-      font-weight: 400; letter-spacing: .06em; color: var(--cream);
-      line-height: 1.2;
-    }
-    .section-title em {
-      font-family: 'Cormorant Garamond', serif; font-style: italic;
-      font-weight: 300; color: var(--warm);
-    }
-    .section-body {
-      font-size: .95rem; line-height: 1.9; color: var(--fog);
-      max-width: 560px; margin-top: 1.2rem;
-    }
+    /* ── SECTION COMMON ── */
+    section{padding:7rem 5vw}
+    .sec-label{display:inline-flex;align-items:center;gap:10px;font-size:.65rem;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:1.1rem}
+    .sec-label::before{content:'';width:22px;height:1.5px;background:var(--gold);flex-shrink:0}
+    .sec-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3.5rem);font-weight:400;color:var(--charcoal);line-height:1.1;margin-bottom:.8rem}
+    .sec-h2 em{font-style:italic;color:var(--gold)}
+    .sec-p{font-size:.95rem;color:var(--c60);line-height:1.85;font-weight:300;max-width:500px}
 
     /* ── ABOUT ── */
-    #about {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 6rem; align-items: center;
-      background: linear-gradient(135deg, #1e1409 0%, #2B2016 100%);
-    }
-
-    .about-visual {
-      position: relative;
-    }
-    .about-frame {
-      width: 100%; aspect-ratio: 4/5;
-      background:
-        linear-gradient(145deg, rgba(184,137,62,.18) 0%, rgba(43,32,22,.8) 100%),
-        radial-gradient(ellipse at 30% 30%, rgba(200,169,122,.25) 0%, transparent 60%);
-      position: relative; overflow: hidden;
-    }
-    .about-frame::before {
-      content: 'A'; font-family: 'Cinzel', serif;
-      font-size: 18rem; font-weight: 600; color: rgba(184,137,62,.06);
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-    }
-    .about-frame-border {
-      position: absolute; inset: 12px;
-      border: 1px solid rgba(184,137,62,.2);
-      pointer-events: none;
-    }
-    .about-badge {
-      position: absolute; bottom: -1.5rem; right: -1.5rem;
-      width: 100px; height: 100px;
-      background: var(--gold);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center;
-    }
-    .about-badge strong {
-      font-family: 'Cinzel', serif; font-size: 1.8rem; color: var(--deep);
-      display: block; line-height: 1;
-    }
-    .about-badge span {
-      font-size: .55rem; letter-spacing: .2em; text-transform: uppercase;
-      color: var(--charcoal); font-weight: 400;
-    }
-
-    .about-stats {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
-      margin-top: 3rem;
-    }
-    .stat { border-left: 1px solid rgba(184,137,62,.3); padding-left: 1.2rem; }
-    .stat strong {
-      font-family: 'Cinzel', serif; font-size: 2rem; color: var(--warm);
-      display: block; line-height: 1;
-    }
-    .stat span { font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--fog); }
+    .about{background:var(--white)}
+    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;margin-top:4rem}
+    .about-visual{position:relative}
+    .about-visual::after{content:'';position:absolute;top:20px;left:20px;right:-20px;bottom:-20px;border:1.5px solid var(--border);border-radius:14px;pointer-events:none;z-index:0}
+    .about-img{position:relative;z-index:1;aspect-ratio:4/5;border-radius:14px;overflow:hidden;background:linear-gradient(145deg,var(--cream-dark),var(--gold-pale),#e8dcc8);display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-md)}
+    .about-badge{position:absolute;bottom:-14px;right:-14px;z-index:2;background:var(--gold);border-radius:12px;padding:1.2rem 1.5rem;box-shadow:var(--sh-md);text-align:center}
+    .badge-num{font-family:'Cormorant Garamond',serif;font-size:2.2rem;color:#fff;font-weight:500;line-height:1}
+    .badge-lbl{font-size:.62rem;letter-spacing:.14em;color:rgba(255,255,255,.78);text-transform:uppercase;margin-top:2px}
+    .about-text{font-size:.95rem;color:var(--c60);line-height:1.9;font-weight:300;margin-top:1.1rem}
+    .about-feats{display:flex;flex-direction:column;gap:.7rem;margin-top:1.8rem}
+    .feat{display:flex;align-items:flex-start;gap:.85rem;padding:1rem 1.2rem;background:var(--cream);border-radius:8px;border-left:2.5px solid var(--gold)}
+    .feat-icon{font-size:1.05rem;flex-shrink:0;margin-top:1px}
+    .feat-title{font-size:.84rem;font-weight:700;color:var(--charcoal);margin-bottom:2px}
+    .feat-text{font-size:.79rem;color:var(--c60);font-weight:300;line-height:1.6}
 
     /* ── SERVICES ── */
-    #services {
-      background: var(--deep);
-      text-align: center;
-    }
-    .services-header { max-width: 600px; margin: 0 auto 4rem; }
+    .services{background:var(--cream)}
+    .services-intro{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem;margin-bottom:3rem}
+    .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
+    .svc-card{background:var(--white);border-radius:12px;padding:2.2rem 1.8rem;display:flex;flex-direction:column;gap:.85rem;border:1.5px solid transparent;box-shadow:var(--sh-sm);transition:border-color .3s,box-shadow .3s,transform .3s}
+    .svc-card:hover{border-color:var(--border);box-shadow:var(--sh-md);transform:translateY(-4px)}
+    .svc-icon{width:50px;height:50px;border-radius:12px;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;font-size:1.25rem;transition:background .3s}
+    .svc-card:hover .svc-icon{background:var(--gold)}
+    .svc-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;color:var(--charcoal)}
+    .svc-desc{font-size:.82rem;color:var(--c60);line-height:1.8;font-weight:300;flex-grow:1}
+    .svc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.4rem;padding-top:.9rem;border-top:1px solid var(--cream-dark)}
+    .svc-price{font-size:.76rem;letter-spacing:.1em;color:var(--gold);font-weight:700;text-transform:uppercase}
+    .svc-arr{font-size:1rem;color:var(--c30);transition:color .25s,transform .25s}
+    .svc-card:hover .svc-arr{color:var(--gold);transform:translateX(3px)}
 
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5px;
-      background: rgba(184,137,62,.12);
-      border: 1px solid rgba(184,137,62,.12);
-    }
+    /* ── NUMBERS ── */
+    .numbers{background:var(--cream-dark);padding:5rem 5vw;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center}
+    .num-val{font-family:'Cormorant Garamond',serif;font-size:clamp(2.6rem,4vw,3.8rem);font-weight:400;color:var(--gold)}
+    .num-lbl{font-size:.73rem;letter-spacing:.16em;text-transform:uppercase;color:var(--c60);font-weight:600;margin-top:.4rem}
 
-    .service-card {
-      background: var(--deep);
-      padding: 3rem 2rem;
-      position: relative; overflow: hidden;
-      transition: background .4s;
-      text-align: left;
-    }
-    .service-card::after {
-      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-      height: 2px; background: linear-gradient(to right, var(--gold), transparent);
-      transform: scaleX(0); transform-origin: left;
-      transition: transform .5s ease;
-    }
-    .service-card:hover { background: rgba(43,32,22,.8); }
-    .service-card:hover::after { transform: scaleX(1); }
+    /* ── TEAM ── */
+    .team{background:var(--white)}
+    .team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem;margin-top:3.5rem}
+    .team-card{display:flex;flex-direction:column;gap:1rem}
+    .team-photo{aspect-ratio:3/4;border-radius:12px;overflow:hidden}
+    .team-photo-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3.8rem;transition:transform .5s ease}
+    .team-card:hover .team-photo-bg{transform:scale(1.04)}
+    .p1{background:linear-gradient(160deg,var(--sage-pale) 0%,#c4d4c2 100%)}
+    .p2{background:linear-gradient(160deg,var(--gold-pale) 0%,#ddd0b8 100%)}
+    .p3{background:linear-gradient(160deg,#dde8e0 0%,#b8cec8 100%)}
+    .team-role{font-size:.67rem;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;font-weight:700}
+    .team-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--charcoal)}
+    .team-bio{font-size:.82rem;color:var(--c60);line-height:1.8;font-weight:300}
 
-    .service-num {
-      font-family: 'Cinzel', serif; font-size: .7rem; color: var(--gold);
-      letter-spacing: .3em; margin-bottom: 1.5rem; display: block;
-    }
-    .service-icon {
-      font-size: 2rem; margin-bottom: 1.2rem; display: block;
-      filter: sepia(1) saturate(2) hue-rotate(5deg);
-    }
-    .service-name {
-      font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 400;
-      color: var(--cream); letter-spacing: .06em; margin-bottom: .8rem;
-    }
-    .service-desc { font-size: .82rem; line-height: 1.8; color: var(--fog); }
-
-    /* ── PHILOSOPHY ── */
-    #philosophy {
-      background: linear-gradient(to bottom, #1A1209, #2B2016);
-      position: relative; text-align: center; overflow: hidden;
-    }
-    .philosophy-inner { max-width: 800px; margin: 0 auto; position: relative; }
-    .philosophy-quote {
-      font-family: 'Cormorant Garamond', serif; font-style: italic;
-      font-size: clamp(1.6rem, 3vw, 2.5rem); font-weight: 300;
-      line-height: 1.5; color: var(--cream); margin: 2rem 0;
-    }
-    .philosophy-quote .highlight { color: var(--warm); }
-    .philosophy-author {
-      font-size: .7rem; letter-spacing: .4em; text-transform: uppercase;
-      color: var(--gold);
-    }
-    .philosophy-glyph {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 8rem; color: rgba(184,137,62,.06);
-      position: absolute; top: -1rem; left: 50%; transform: translateX(-50%);
-      pointer-events: none; line-height: 1;
-    }
-
-    /* ── BOOKING ── */
-    #booking {
-      background:
-        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(184,137,62,.1) 0%, transparent 60%),
-        linear-gradient(175deg, #2B2016 0%, #1A1209 100%);
-    }
-    .booking-header { text-align: center; margin-bottom: 4rem; }
-
-    .booking-grid {
-      display: grid; grid-template-columns: 1fr 1.6fr; gap: 4rem;
-      max-width: 1100px; margin: 0 auto;
-    }
-
-    .booking-info h3 {
-      font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 400;
-      color: var(--warm); letter-spacing: .12em;
-      margin: 2rem 0 .8rem;
-    }
-    .booking-info h3:first-child { margin-top: 0; }
-    .booking-info p, .booking-info li {
-      font-size: .82rem; color: var(--fog); line-height: 1.9;
-    }
-    .booking-info ul { list-style: none; }
-    .booking-info li::before { content: '◆ '; color: var(--gold); font-size: .5rem; vertical-align: middle; }
+    /* ── TESTIMONIALS ── */
+    .testimonials{background:var(--cream);overflow:hidden}
+    .t-wrap{overflow:hidden;position:relative;margin-top:3rem}
+    .t-wrap::before,.t-wrap::after{content:'';position:absolute;top:0;bottom:0;width:90px;z-index:2;pointer-events:none}
+    .t-wrap::before{left:0;background:linear-gradient(90deg,var(--cream),transparent)}
+    .t-wrap::after{right:0;background:linear-gradient(-90deg,var(--cream),transparent)}
+    .t-track{display:flex;gap:1.4rem;animation:marquee 30s linear infinite}
+    .t-card{min-width:300px;background:var(--white);border-radius:12px;padding:1.8rem;box-shadow:var(--sh-sm);border-top:2.5px solid var(--gold);flex-shrink:0}
+    .t-stars{color:var(--gold);font-size:.9rem;margin-bottom:.7rem;letter-spacing:2px}
+    .t-text{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;font-weight:300;color:var(--charcoal);line-height:1.65;margin-bottom:1rem}
+    .t-author{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--c60);font-weight:600}
 
     /* ── FORM ── */
-    .booking-form {
-      background: rgba(245,239,230,.03);
-      border: 1px solid rgba(184,137,62,.18);
-      padding: 2.8rem;
-    }
+    #citas{background:var(--cream-dark)}
+    .form-layout{display:grid;grid-template-columns:1fr 1.55fr;gap:5rem;align-items:start;margin-top:3.5rem}
+    .form-aside{display:flex;flex-direction:column;gap:1.4rem}
+    .aside-card{background:var(--white);border-radius:12px;padding:1.5rem;display:flex;gap:1rem;align-items:flex-start;box-shadow:var(--sh-sm);border-left:3px solid var(--gold)}
+    .aside-icon{width:38px;height:38px;border-radius:10px;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+    .aside-title{font-size:.82rem;font-weight:700;color:var(--charcoal);margin-bottom:3px}
+    .aside-text{font-size:.79rem;color:var(--c60);line-height:1.7;font-weight:300}
 
-    .form-title {
-      font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 400;
-      color: var(--cream); letter-spacing: .1em; margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid rgba(184,137,62,.2);
-    }
+    .appt-form{background:var(--white);border-radius:16px;padding:2.8rem;box-shadow:var(--sh-md);display:flex;flex-direction:column;gap:1.3rem}
+    .form-h{font-family:'Cormorant Garamond',serif;font-size:1.65rem;font-weight:400;color:var(--charcoal)}
+    .form-sh{font-size:.79rem;color:var(--c60);font-weight:300}
+    .divider{height:1px;background:var(--cream-dark)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .fg{display:flex;flex-direction:column;gap:.42rem}
+    .fg label{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--c60);font-weight:700}
+    .fg input,.fg select,.fg textarea{background:var(--cream);border:1.5px solid var(--cream-dark);border-radius:8px;color:var(--charcoal);font-family:'Mulish',sans-serif;font-size:.9rem;font-weight:400;padding:.73rem 1rem;outline:none;width:100%;transition:border-color .25s,background .25s}
+    .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold);background:var(--white)}
+    .fg input::placeholder,.fg textarea::placeholder{color:var(--c30)}
+    .fg textarea{resize:vertical;min-height:85px}
+    .fg select option{background:#fff;color:var(--charcoal)}
 
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
-    .form-group { margin-bottom: 1.4rem; }
-    .form-group.full { grid-column: 1 / -1; }
+    .time-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem}
+    .ts{padding:.58rem .3rem;text-align:center;font-size:.7rem;font-weight:600;letter-spacing:.04em;border:1.5px solid var(--cream-dark);border-radius:8px;color:var(--c60);cursor:pointer;transition:all .2s;user-select:none;-webkit-user-select:none;background:var(--cream)}
+    .ts:hover:not(.taken):not(.sel){border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+    .ts.sel{background:var(--gold);border-color:var(--gold);color:#fff}
+    .ts.taken{background:var(--cream-dark);border-color:transparent;color:var(--c30);cursor:not-allowed;text-decoration:line-through}
+    .ts.loading{opacity:.4;cursor:wait}
+    .slot-leg{display:flex;gap:1.2rem;flex-wrap:wrap}
+    .leg-item{display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--c60);font-weight:300}
+    .leg-dot{width:10px;height:10px;border-radius:2px}
+    .ld-a{background:var(--cream-dark)}
+    .ld-s{background:var(--gold)}
+    .ld-t{background:var(--cream-dark);opacity:.5}
 
-    label {
-      display: block; font-size: .65rem; font-weight: 300;
-      letter-spacing: .3em; text-transform: uppercase;
-      color: var(--warm); margin-bottom: .5rem;
-    }
-
-    input, select, textarea {
-      width: 100%; background: rgba(245,239,230,.04);
-      border: 1px solid rgba(184,137,62,.22); color: var(--cream);
-      font-family: 'Jost', sans-serif; font-size: .88rem; font-weight: 300;
-      padding: .85rem 1rem;
-      transition: border-color .3s, background .3s;
-      appearance: none;
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--gold);
-      background: rgba(184,137,62,.06);
-    }
-    input::placeholder, textarea::placeholder { color: rgba(155,142,128,.5); }
-    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23B8893E' d='M1 1l5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
-    select option { background: #2B2016; color: var(--cream); }
-    textarea { resize: vertical; min-height: 90px; }
-
-    /* Slot grid */
-    .slot-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem;
-      margin-top: .5rem;
-    }
-    .slot {
-      padding: .5rem .3rem; text-align: center;
-      font-size: .7rem; letter-spacing: .1em;
-      border: 1px solid rgba(184,137,62,.22);
-      color: var(--fog); background: transparent;
-      transition: all .25s; width: 100%;
-    }
-    .slot:hover:not(.taken):not(.selected) {
-      border-color: var(--warm); color: var(--warm); background: rgba(184,137,62,.07);
-    }
-    .slot.selected {
-      background: var(--gold); border-color: var(--gold);
-      color: var(--deep); font-weight: 400;
-    }
-    .slot.taken {
-      opacity: .35; text-decoration: line-through;
-      pointer-events: none;
-    }
-    .slot.loading { opacity: .5; pointer-events: none; }
-
-    #slots-loading {
-      font-size: .75rem; color: var(--fog); letter-spacing: .15em;
-      text-align: center; padding: 1rem 0;
-    }
-
-    .slots-legend {
-      display: flex; gap: 1.5rem; margin-top: .8rem;
-      font-size: .65rem; letter-spacing: .15em; text-transform: uppercase;
-      color: var(--fog);
-    }
-    .legend-item { display: flex; align-items: center; gap: .4rem; }
-    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .legend-dot.avail { background: rgba(200,169,122,.5); border: 1px solid var(--warm); }
-    .legend-dot.taken { background: rgba(155,142,128,.3); }
-    .legend-dot.sel   { background: var(--gold); }
-
-    /* Submit */
-    .form-submit {
-      width: 100%; background: var(--gold); color: var(--deep);
-      border: none; font-family: 'Jost', sans-serif; font-size: .75rem;
-      font-weight: 300; letter-spacing: .3em; text-transform: uppercase;
-      padding: 1.1rem; margin-top: 1rem;
-      position: relative; overflow: hidden; transition: transform .2s;
-    }
-    .form-submit:hover { transform: translateY(-1px); }
-    .form-submit:disabled { opacity: .6; transform: none; }
-
-    /* Alerts */
-    .alert {
-      padding: .9rem 1.2rem; font-size: .8rem; letter-spacing: .05em;
-      margin-top: 1rem; display: none;
-    }
-    .alert.success { background: rgba(39,174,96,.1); border: 1px solid rgba(39,174,96,.3); color: #6fcf97; }
-    .alert.error   { background: rgba(192,57,43,.1); border: 1px solid rgba(192,57,43,.3); color: #eb5757; }
-    .alert.show    { display: block; }
+    .btn-submit{width:100%;padding:1rem;background:var(--gold);border:none;border-radius:40px;color:#fff;font-family:'Mulish',sans-serif;font-size:.76rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:background .25s,box-shadow .25s,transform .2s;box-shadow:0 6px 24px rgba(197,160,89,.3);display:flex;align-items:center;justify-content:center;gap:.6rem}
+    .btn-submit:hover{background:#b08d45;box-shadow:0 10px 32px rgba(197,160,89,.4);transform:translateY(-1px)}
+    .btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+    .form-msg{padding:.85rem 1rem;border-radius:8px;font-size:.82rem;line-height:1.6;display:none}
+    .form-msg.ok{background:#edf7ec;border:1.5px solid #b2dbb0;color:#3a6e38;display:block}
+    .form-msg.err{background:#fdf0f0;border:1.5px solid #e8b0b0;color:#8b3a3a;display:block}
+    .form-note{font-size:.68rem;color:var(--c30);text-align:center;font-weight:300}
 
     /* ── FOOTER ── */
-    footer {
-      background: #0e0a05;
-      padding: 5rem 4rem 3rem;
-    }
-    .footer-grid {
-      display: grid; grid-template-columns: 2fr 1fr 1fr;
-      gap: 4rem; margin-bottom: 3rem;
-    }
-    .footer-brand .logo {
-      font-family: 'Cinzel', serif; font-size: 1.6rem;
-      color: var(--warm); letter-spacing: .18em; margin-bottom: 1rem; display: block;
-    }
-    .footer-brand .logo span { color: var(--gold); }
-    .footer-brand p { font-size: .82rem; color: var(--fog); line-height: 1.8; max-width: 320px; }
-    .footer-col h4 {
-      font-family: 'Jost', sans-serif; font-size: .65rem;
-      letter-spacing: .4em; text-transform: uppercase; color: var(--warm);
-      margin-bottom: 1.2rem;
-    }
-    .footer-col ul { list-style: none; }
-    .footer-col li { margin-bottom: .7rem; }
-    .footer-col a {
-      font-size: .82rem; color: var(--fog); text-decoration: none;
-      transition: color .3s;
-    }
-    .footer-col a:hover { color: var(--warm); }
-    .footer-bottom {
-      border-top: 1px solid rgba(184,137,62,.12);
-      padding-top: 2rem; display: flex;
-      justify-content: space-between; align-items: center;
-    }
-    .footer-bottom p { font-size: .7rem; color: rgba(155,142,128,.5); letter-spacing: .1em; }
+    footer{background:var(--charcoal);padding:5rem 5vw 2.5rem}
+    .footer-top{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3.5rem;padding-bottom:3.5rem;border-bottom:1px solid rgba(255,255,255,.07)}
+    .f-logo{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:500;color:var(--gold);margin-bottom:.9rem}
+    .f-logo em{font-style:italic;font-weight:300;color:var(--gold-light)}
+    .f-tagline{font-size:.84rem;color:rgba(255,255,255,.32);line-height:1.85;font-weight:300;max-width:270px}
+    .f-head{font-size:.64rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:1.1rem}
+    .f-links{display:flex;flex-direction:column;gap:.55rem}
+    .f-links a{font-size:.83rem;color:rgba(255,255,255,.36);font-weight:300;transition:color .2s}
+    .f-links a:hover{color:var(--gold)}
+    .footer-bot{display:flex;justify-content:space-between;align-items:center;font-size:.73rem;color:rgba(255,255,255,.2);font-weight:300;flex-wrap:wrap;gap:1rem}
+    .socials{display:flex;gap:.65rem}
+    .socials a{width:33px;height:33px;border-radius:50%;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:rgba(255,255,255,.28);transition:border-color .25s,color .25s}
+    .socials a:hover{border-color:var(--gold);color:var(--gold)}
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 960px) {
-      nav { padding: 1.2rem 2rem; }
-      .nav-links { display: none; }
-      section { padding: 5rem 2rem; }
-      #about { grid-template-columns: 1fr; gap: 3rem; }
-      .services-grid { grid-template-columns: 1fr 1fr; }
-      .booking-grid { grid-template-columns: 1fr; gap: 2.5rem; }
-      .footer-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    @media(max-width:960px){
+      .hero{grid-template-columns:1fr}.hero-right{display:none}.hero-vline{display:none}
+      .hero-left{padding-top:14vh}
+      .nav-links{display:none;position:absolute;top:74px;left:0;right:0;background:rgba(249,245,240,.97);flex-direction:column;align-items:flex-start;padding:1rem 5vw 1.5rem;gap:0;border-bottom:1px solid var(--border)}
+      .nav-links.open{display:flex}.nav-links a{padding:.9rem 0;width:100%;border-bottom:1px solid rgba(197,160,89,.1);font-size:.85rem}
+      .hamburger{display:flex}
+      .about-grid{grid-template-columns:1fr;gap:3rem}.about-visual::after{display:none}
+      .services-grid{grid-template-columns:1fr 1fr}
+      .numbers{grid-template-columns:1fr 1fr}
+      .team-grid{grid-template-columns:1fr 1fr;gap:2rem}
+      .form-layout{grid-template-columns:1fr;gap:2.5rem}
+      .footer-top{grid-template-columns:1fr 1fr;gap:2rem}
     }
-    @media (max-width: 600px) {
-      .services-grid { grid-template-columns: 1fr; }
-      .form-row { grid-template-columns: 1fr; }
-      .slot-grid { grid-template-columns: repeat(3, 1fr); }
-      .about-badge { right: 0; bottom: 0; }
+    @media(max-width:600px){
+      section{padding:5rem 5vw}
+      .services-grid{grid-template-columns:1fr}
+      .team-grid{grid-template-columns:1fr}
+      .numbers{grid-template-columns:1fr 1fr;gap:1.5rem}
+      .form-row{grid-template-columns:1fr}
+      .time-grid{grid-template-columns:repeat(3,1fr)}
+      .footer-top{grid-template-columns:1fr}
+      .footer-bot{flex-direction:column;text-align:center}
+      .appt-form{padding:1.8rem}
+      .strip{gap:1.4rem}
     }
-
-    /* ── REVEAL ANIMATIONS ── */
-    .reveal {
-      opacity: 0; transform: translateY(30px);
-      transition: opacity .8s ease, transform .8s ease;
+    @media(max-width:380px){
+      .time-grid{grid-template-columns:repeat(2,1fr)}
+      h1.hero-title{font-size:2.7rem}
     }
-    .reveal.visible { opacity: 1; transform: none; }
-    .reveal-delay-1 { transition-delay: .15s; }
-    .reveal-delay-2 { transition-delay: .3s; }
-    .reveal-delay-3 { transition-delay: .45s; }
   </style>
 </head>
 <body>
 
-<!-- Custom Cursor -->
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
-
 <!-- NAV -->
-<nav id="mainNav">
-  <a class="nav-logo" href="#">Aureli<span>a</span></a>
-  <ul class="nav-links">
-    <li><a href="#about">Nosotros</a></li>
-    <li><a href="#services">Servicios</a></li>
-    <li><a href="#booking">Citas</a></li>
-    <li><a href="#contact">Contacto</a></li>
+<nav id="navbar">
+  <div class="nav-logo">Aurelia<em>.</em></div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#nosotros">Nosotros</a></li>
+    <li><a href="#servicios">Servicios</a></li>
+    <li><a href="#equipo">Equipo</a></li>
+    <li><a href="#citas" class="nav-btn">Reservar Cita</a></li>
   </ul>
-  <a class="nav-cta" href="#booking">Reservar Ahora</a>
+  <button class="hamburger" id="ham" aria-label="Menú"><span></span><span></span><span></span></button>
 </nav>
 
 <!-- HERO -->
-<section id="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-ornament"></div>
-  <div class="hero-ornament"></div>
-  <div class="hero-ornament"></div>
+<section class="hero" id="inicio">
+  <div class="hero-glow g1"></div>
+  <div class="hero-glow g2"></div>
+  <div class="hero-vline"></div>
 
-  <p class="hero-eyebrow">Centro Médico · Spa de Lujo</p>
-  <h1 class="hero-title">Aureli<em>a</em></h1>
-  <p class="hero-sub">Donde la ciencia se convierte en arte y el bienestar, en ritual.</p>
-  <div class="hero-divider"></div>
-  <div class="hero-actions">
-    <a class="btn-primary" href="#booking"><span>Agenda tu Cita</span></a>
-    <a class="btn-outline" href="#services">Descubrir Servicios</a>
+  <div class="hero-left">
+    <div class="eyebrow">Centro Médico &amp; Spa · Lima, Perú</div>
+    <h1 class="hero-title">
+      Ciencia que cuida,<br>arte que <em>renueva.</em>
+    </h1>
+    <p class="hero-sub">Tratamientos médico-estéticos de alta precisión en un entorno de bienestar exclusivo. Tu versión más radiante, respaldada por la mejor ciencia.</p>
+    <div class="hero-actions">
+      <a href="#citas" class="btn-gold">Reservar mi Cita →</a>
+      <a href="#servicios" class="btn-line">Ver Servicios</a>
+    </div>
   </div>
 
-  <div class="scroll-hint">
-    <span>Explorar</span>
-    <div class="scroll-line"></div>
+  <div class="hero-right">
+    <div class="hero-stat s1"><div class="stat-num">3K+</div><div class="stat-lbl">Pacientes<br>satisfechas</div></div>
+    <div class="hero-card">
+      <div class="hero-card-img">
+        <svg width="130" height="130" viewBox="0 0 130 130" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:.28">
+          <circle cx="65" cy="65" r="56" stroke="#C5A059" stroke-width="1.5"/>
+          <circle cx="65" cy="65" r="38" stroke="#C5A059" stroke-width="1" stroke-dasharray="5 5"/>
+          <path d="M65 22V108M22 65H108" stroke="#C5A059" stroke-width="1.2"/>
+          <circle cx="65" cy="65" r="9" stroke="#C5A059" stroke-width="1.5" fill="none"/>
+        </svg>
+        <div class="hero-card-float">✦ Resultados naturales</div>
+      </div>
+      <div class="hero-card-body">
+        <div class="hero-card-tag">Tratamiento del Mes</div>
+        <div class="hero-card-title">HydraFacial Premium</div>
+        <div class="hero-card-sub">Limpieza, hidratación y luminosidad en 60 minutos.</div>
+        <button class="hero-card-cta" onclick="location.href='#citas'">Reservar ahora →</button>
+      </div>
+    </div>
+    <div class="hero-stat s2"><div class="stat-num">98%</div><div class="stat-lbl">Índice de<br>satisfacción</div></div>
   </div>
 </section>
 
+<!-- STRIP -->
+<div class="strip">
+  <div class="strip-item"><div class="strip-dot"></div>Medicina Estética Avanzada</div>
+  <div class="strip-item"><div class="strip-dot"></div>Tecnología de Última Generación</div>
+  <div class="strip-item"><div class="strip-dot"></div>Especialistas Certificados</div>
+  <div class="strip-item"><div class="strip-dot"></div>Resultados Garantizados</div>
+  <div class="strip-item"><div class="strip-dot"></div>Reservas en Tiempo Real</div>
+</div>
+
 <!-- ABOUT -->
-<section id="about">
-  <div class="about-visual reveal">
-    <div class="about-frame">
-      <div class="about-frame-border"></div>
+<section class="about" id="nosotros">
+  <div class="sec-label">Quiénes Somos</div>
+  <div class="about-grid">
+    <div class="about-visual reveal">
+      <div class="about-img">
+        <svg width="100" height="100" viewBox="0 0 100 100" fill="none" style="opacity:.28">
+          <circle cx="50" cy="50" r="44" stroke="#C5A059" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="30" stroke="#C5A059" stroke-width="1" stroke-dasharray="4 4"/>
+          <path d="M50 14V86M14 50H86" stroke="#C5A059" stroke-width="1.2"/>
+          <circle cx="50" cy="50" r="7" stroke="#C5A059" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="about-badge">
+        <div class="badge-num">12+</div>
+        <div class="badge-lbl">Años de<br>Excelencia</div>
+      </div>
     </div>
-    <div class="about-badge">
-      <strong>15</strong>
-      <span>Años de<br>Excelencia</span>
-    </div>
-  </div>
-  <div class="about-content">
-    <p class="section-tag reveal">Nuestra Esencia</p>
-    <h2 class="section-title reveal reveal-delay-1">Un espacio creado<br>para <em>transformarte</em></h2>
-    <p class="section-body reveal reveal-delay-2">
-      Aurelia nació de la convicción de que la medicina estética y el bienestar profundo no se contraponen —
-      se complementan. Nuestro equipo de especialistas combina tecnología de vanguardia con rituales ancestrales
-      para ofrecerte una experiencia sin igual.
-    </p>
-    <div class="about-stats reveal reveal-delay-3">
-      <div class="stat"><strong>3,200+</strong><span>Clientes satisfechos</span></div>
-      <div class="stat"><strong>28</strong><span>Especialistas certificados</span></div>
-      <div class="stat"><strong>40+</strong><span>Tratamientos exclusivos</span></div>
-      <div class="stat"><strong>100%</strong><span>Productos premium</span></div>
+    <div class="reveal rd1">
+      <div class="sec-label">Nuestra Filosofía</div>
+      <h2 class="sec-h2">Donde la <em>ciencia</em><br>abraza el bienestar</h2>
+      <p class="about-text">En Aurelia fusionamos medicina estética de vanguardia con rituales de bienestar profundo. Cada visita está cuidadosamente diseñada para renovar tu cuerpo y espíritu sin comprometer jamás la excelencia clínica.</p>
+      <p class="about-text" style="margin-top:.8rem">Nuestro equipo trabaja con protocolos internacionales y los ingredientes más selectos del mercado global.</p>
+      <div class="about-feats">
+        <div class="feat"><div class="feat-icon">🔬</div><div><div class="feat-title">Medicina Basada en Evidencia</div><div class="feat-text">Cada tratamiento respaldado por estudios clínicos y protocolos internacionales.</div></div></div>
+        <div class="feat"><div class="feat-icon">✦</div><div><div class="feat-title">Experiencia de Lujo</div><div class="feat-text">Espacios diseñados para que cada visita sea un ritual transformador.</div></div></div>
+        <div class="feat"><div class="feat-icon">🤝</div><div><div class="feat-title">Atención Personalizada</div><div class="feat-text">Evaluación individual y plan de tratamiento a medida para cada paciente.</div></div></div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- SERVICES -->
-<section id="services">
-  <div class="services-header">
-    <p class="section-tag reveal">Nuestros Tratamientos</p>
-    <h2 class="section-title reveal reveal-delay-1">Rituales de <em>excelencia</em></h2>
+<section class="services" id="servicios">
+  <div class="services-intro">
+    <div>
+      <div class="sec-label">Lo que Ofrecemos</div>
+      <h2 class="sec-h2">Tratamientos <em>premium</em></h2>
+      <p class="sec-p">Soluciones médico-estéticas personalizadas con la más avanzada tecnología.</p>
+    </div>
+    <a href="#citas" class="btn-gold" style="align-self:flex-end;white-space:nowrap">Reservar Ahora</a>
   </div>
   <div class="services-grid reveal">
-    <div class="service-card">
-      <span class="service-num">01</span>
-      <span class="service-icon">✦</span>
-      <h3 class="service-name">Medicina Estética</h3>
-      <p class="service-desc">Tratamientos faciales y corporales con tecnología láser, radiofrecuencia y biorrevitalización para resultados visibles y duraderos.</p>
+    <div class="svc-card"><div class="svc-icon">💉</div><div class="svc-name">Medicina Estética</div><div class="svc-desc">Botox, rellenos de ácido hialurónico, bioestimulación y lifting no quirúrgico con resultados naturales.</div><div class="svc-foot"><span class="svc-price">Desde S/ 350</span><span class="svc-arr">→</span></div></div>
+    <div class="svc-card"><div class="svc-icon">✨</div><div class="svc-name">Tratamientos Faciales</div><div class="svc-desc">HydraFacial, peelings enzimáticos, mesoterapia facial y protocolos anti-aging personalizados.</div><div class="svc-foot"><span class="svc-price">Desde S/ 220</span><span class="svc-arr">→</span></div></div>
+    <div class="svc-card"><div class="svc-icon">🔆</div><div class="svc-name">Medicina Láser</div><div class="svc-desc">Depilación definitiva, rejuvenecimiento, eliminación de manchas y tratamiento de rosácea IPL.</div><div class="svc-foot"><span class="svc-price">Desde S/ 280</span><span class="svc-arr">→</span></div></div>
+    <div class="svc-card"><div class="svc-icon">🌿</div><div class="svc-name">Ritual Spa Corporal</div><div class="svc-desc">Exfoliaciones, envolturas minerales, drenaje linfático y masajes terapéuticos en suite privada.</div><div class="svc-foot"><span class="svc-price">Desde S/ 180</span><span class="svc-arr">→</span></div></div>
+    <div class="svc-card"><div class="svc-icon">🥗</div><div class="svc-name">Nutrición Clínica</div><div class="svc-desc">Planes nutricionales supervisados, análisis de composición corporal y suplementación de precisión.</div><div class="svc-foot"><span class="svc-price">Desde S/ 160</span><span class="svc-arr">→</span></div></div>
+    <div class="svc-card"><div class="svc-icon">🧘</div><div class="svc-name">Bienestar &amp; Mente</div><div class="svc-desc">Psicología integrativa, mindfulness médico, terapia de flotación y gestión del estrés personalizada.</div><div class="svc-foot"><span class="svc-price">Desde S/ 140</span><span class="svc-arr">→</span></div></div>
+  </div>
+</section>
+
+<!-- NUMBERS -->
+<div class="numbers reveal">
+  <div><div class="num-val">3,000+</div><div class="num-lbl">Pacientes Felices</div></div>
+  <div><div class="num-val">18</div><div class="num-lbl">Especialistas</div></div>
+  <div><div class="num-val">12</div><div class="num-lbl">Años de Experiencia</div></div>
+  <div><div class="num-val">98%</div><div class="num-lbl">Satisfacción</div></div>
+</div>
+
+<!-- TEAM -->
+<section class="team" id="equipo">
+  <div class="sec-label">Nuestro Equipo</div>
+  <h2 class="sec-h2">Especialistas de <em>élite</em></h2>
+  <p class="sec-p">Médicos con formación internacional y pasión genuina por el bienestar integral.</p>
+  <div class="team-grid reveal">
+    <div class="team-card">
+      <div class="team-photo"><div class="team-photo-bg p1">👩‍⚕️</div></div>
+      <div class="team-role">Directora Médica · Dermatóloga</div>
+      <div class="team-name">Dra. Valentina Ruiz</div>
+      <div class="team-bio">Especialista en medicina estética avanzada con formación en París y Nueva York. Más de 12 años devolviendo confianza a sus pacientes.</div>
     </div>
-    <div class="service-card">
-      <span class="service-num">02</span>
-      <span class="service-icon">◈</span>
-      <h3 class="service-name">Spa Sensorial</h3>
-      <p class="service-desc">Masajes terapéuticos, rituales de aromaterapia y envolturas con ingredientes botánicos que renuevan cuerpo y mente.</p>
+    <div class="team-card">
+      <div class="team-photo"><div class="team-photo-bg p2">👨‍⚕️</div></div>
+      <div class="team-role">Cirujano Plástico</div>
+      <div class="team-name">Dr. Andrés Castillo</div>
+      <div class="team-bio">Miembro de la Sociedad Internacional de Cirugía Estética. Reconocido por sus resultados naturales y técnica de precisión milimétrica.</div>
     </div>
-    <div class="service-card">
-      <span class="service-num">03</span>
-      <span class="service-icon">⬡</span>
-      <h3 class="service-name">Nutrición Clínica</h3>
-      <p class="service-desc">Planes personalizados con seguimiento médico especializado para alcanzar el equilibrio metabólico y potenciar tu vitalidad.</p>
-    </div>
-    <div class="service-card">
-      <span class="service-num">04</span>
-      <span class="service-icon">◇</span>
-      <h3 class="service-name">Dermatología Premium</h3>
-      <p class="service-desc">Diagnóstico y tratamiento de afecciones cutáneas con los protocolos más avanzados de la dermatología contemporánea.</p>
-    </div>
-    <div class="service-card">
-      <span class="service-num">05</span>
-      <span class="service-icon">❋</span>
-      <h3 class="service-name">Terapia Holística</h3>
-      <p class="service-desc">Meditación guiada, yoga médico y técnicas de mindfulness diseñadas para restablecer el equilibrio interior.</p>
-    </div>
-    <div class="service-card">
-      <span class="service-num">06</span>
-      <span class="service-icon">✧</span>
-      <h3 class="service-name">Circuito Hídrico</h3>
-      <p class="service-desc">Experiencia termal completa con piscinas de contrastes, sauna finlandesa, hammam y ducha de sensaciones.</p>
+    <div class="team-card">
+      <div class="team-photo"><div class="team-photo-bg p3">👩‍⚕️</div></div>
+      <div class="team-role">Nutrióloga Clínica</div>
+      <div class="team-name">Dra. Isabela Morales</div>
+      <div class="team-bio">Pionera en nutrición funcional integrativa en Perú. Especializada en salud hormonal, longevidad y rendimiento cognitivo.</div>
     </div>
   </div>
 </section>
 
-<!-- PHILOSOPHY -->
-<section id="philosophy">
-  <div class="philosophy-inner">
-    <div class="philosophy-glyph">"</div>
-    <p class="section-tag reveal">Nuestra Filosofía</p>
-    <blockquote class="philosophy-quote reveal reveal-delay-1">
-      "El verdadero lujo no está en lo que posees,<br>
-      sino en cómo te <span class="highlight">sientes contigo mismo</span>."
-    </blockquote>
-    <p class="philosophy-author reveal reveal-delay-2">— Aurelia · Centro Médico Spa</p>
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="sec-label">Testimonios</div>
+  <h2 class="sec-h2">Lo que dicen nuestras <em>pacientes</em></h2>
+  <div class="t-wrap">
+    <div class="t-track">
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"Aurelia no es un spa, es una experiencia transformadora. Salí siendo otra persona."</div><div class="t-author">— Mariana V., Lima</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"La atención es impecable, desde recepción hasta el tratamiento. Todo en un nivel distinto."</div><div class="t-author">— Carmen S., San Isidro</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"La Dra. Ruiz es excepcional. Resultados naturales que jamás imaginé posibles a mi edad."</div><div class="t-author">— Patricia M., Miraflores</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"Fui escéptica, pero el HydraFacial superó cualquier expectativa. Mi piel brilla como nunca."</div><div class="t-author">— Luisa R., San Isidro</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"El ritual corporal es puro lujo. Una hora de paz absoluta que necesitaba con urgencia."</div><div class="t-author">— Andrea T., Surco</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"Ambiente sofisticado, trato de primer nivel, resultados que hablan solos. Volveré siempre."</div><div class="t-author">— Sofía L., La Molina</div></div>
+      <!-- loop duplicate -->
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"Aurelia no es un spa, es una experiencia transformadora. Salí siendo otra persona."</div><div class="t-author">— Mariana V., Lima</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"La atención es impecable, desde recepción hasta el tratamiento. Todo en un nivel distinto."</div><div class="t-author">— Carmen S., San Isidro</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"La Dra. Ruiz es excepcional. Resultados naturales que jamás imaginé posibles a mi edad."</div><div class="t-author">— Patricia M., Miraflores</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"Fui escéptica, pero el HydraFacial superó cualquier expectativa. Mi piel brilla como nunca."</div><div class="t-author">— Luisa R., San Isidro</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"El ritual corporal es puro lujo. Una hora de paz absoluta que necesitaba con urgencia."</div><div class="t-author">— Andrea T., Surco</div></div>
+      <div class="t-card"><div class="t-stars">★★★★★</div><div class="t-text">"Ambiente sofisticado, trato de primer nivel, resultados que hablan solos. Volveré siempre."</div><div class="t-author">— Sofía L., La Molina</div></div>
+    </div>
   </div>
 </section>
 
-<!-- BOOKING -->
-<section id="booking">
-  <div class="booking-header">
-    <p class="section-tag reveal">Reservaciones</p>
-    <h2 class="section-title reveal reveal-delay-1">Agenda tu <em>experiencia</em></h2>
-    <p class="section-body reveal reveal-delay-2" style="margin: 1rem auto 0; text-align:center;">
-      Selecciona el servicio y el horario que mejor se adapte a tu día. Los turnos marcados ya han sido reservados.
-    </p>
-  </div>
-
-  <div class="booking-grid">
-    <!-- Info -->
-    <div class="booking-info reveal">
-      <h3>Horario de Atención</h3>
-      <ul>
-        <li>Lunes a Viernes: 8:00 am – 8:00 pm</li>
-        <li>Sábados: 9:00 am – 6:00 pm</li>
-        <li>Domingos: 10:00 am – 4:00 pm</li>
-      </ul>
-      <h3>Política de Citas</h3>
-      <p>Confirma tu cita con al menos 2 horas de anticipación. Las cancelaciones deben realizarse con 24 horas de antelación para no generar cargo.</p>
-      <h3>Ubicación</h3>
-      <p>Av. Principal 1420, Suite 305<br>Lima, Perú<br><br>+51 (1) 234-5678<br>hola@aurelia.pe</p>
+<!-- APPOINTMENT FORM -->
+<section id="citas">
+  <div class="sec-label">Reserva Online</div>
+  <h2 class="sec-h2">Agenda tu <em>cita</em></h2>
+  <p class="sec-p">Elige tu horario ideal. Los turnos se bloquean en tiempo real con Firebase para garantizar tu exclusividad.</p>
+  <div class="form-layout">
+    <div class="form-aside reveal">
+      <div class="aside-card"><div class="aside-icon">📍</div><div><div class="aside-title">Ubicación</div><div class="aside-text">Av. Javier Prado Este 1234, San Isidro, Lima — Perú</div></div></div>
+      <div class="aside-card"><div class="aside-icon">🕐</div><div><div class="aside-title">Horario de Atención</div><div class="aside-text">Lun — Vie: 8:00 am – 8:00 pm<br>Sábados: 9:00 am – 6:00 pm</div></div></div>
+      <div class="aside-card"><div class="aside-icon">📞</div><div><div class="aside-title">Contacto Directo</div><div class="aside-text">+51 1 234-5678<br>hola@aurelia.pe</div></div></div>
+      <div class="aside-card"><div class="aside-icon">🔒</div><div><div class="aside-title">Reserva Garantizada</div><div class="aside-text">Tu horario queda bloqueado al instante. Recibirás confirmación por correo de forma inmediata.</div></div></div>
     </div>
-
-    <!-- Form -->
-    <div class="booking-form reveal reveal-delay-1">
-      <p class="form-title">Nueva Reservación</p>
-
+    <div class="appt-form reveal rd1">
+      <div><div class="form-h">Solicitar Cita</div><div class="form-sh">Todos los campos marcados son obligatorios.</div></div>
+      <div class="divider"></div>
       <div class="form-row">
-        <div class="form-group">
-          <label for="f-name">Nombre</label>
-          <input id="f-name" type="text" placeholder="Tu nombre" required />
-        </div>
-        <div class="form-group">
-          <label for="f-last">Apellido</label>
-          <input id="f-last" type="text" placeholder="Tu apellido" required />
-        </div>
+        <div class="fg"><label>Nombre *</label><input type="text" id="fname" placeholder="María"/></div>
+        <div class="fg"><label>Apellido *</label><input type="text" id="lname" placeholder="García"/></div>
       </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="f-email">Correo Electrónico</label>
-          <input id="f-email" type="email" placeholder="tu@email.com" required />
-        </div>
-        <div class="form-group">
-          <label for="f-phone">Teléfono</label>
-          <input id="f-phone" type="tel" placeholder="+51 9XX XXX XXX" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="f-service">Servicio</label>
-        <select id="f-service" required>
-          <option value="">Selecciona un servicio...</option>
-          <option>Medicina Estética</option>
-          <option>Spa Sensorial</option>
-          <option>Nutrición Clínica</option>
-          <option>Dermatología Premium</option>
-          <option>Terapia Holística</option>
-          <option>Circuito Hídrico</option>
+      <div class="fg"><label>Correo Electrónico *</label><input type="email" id="email" placeholder="maria@correo.com"/></div>
+      <div class="fg"><label>Teléfono *</label><input type="tel" id="phone" placeholder="+51 9XX XXX XXX"/></div>
+      <div class="fg">
+        <label>Servicio *</label>
+        <select id="service">
+          <option value="">Selecciona un servicio…</option>
+          <option>Medicina Estética</option><option>Tratamientos Faciales</option>
+          <option>Medicina Láser</option><option>Ritual Spa Corporal</option>
+          <option>Nutrición Clínica</option><option>Bienestar &amp; Mente</option>
         </select>
       </div>
-
-      <div class="form-group">
-        <label for="f-date">Fecha</label>
-        <input id="f-date" type="date" required />
-      </div>
-
-      <div class="form-group">
-        <label>Horario Disponible</label>
-        <div id="slots-loading">Selecciona una fecha para ver los horarios disponibles.</div>
-        <div class="slot-grid" id="slot-grid" style="display:none;"></div>
-        <div class="slots-legend" id="slots-legend" style="display:none;">
-          <div class="legend-item"><div class="legend-dot avail"></div> Disponible</div>
-          <div class="legend-item"><div class="legend-dot taken"></div> Ocupado</div>
-          <div class="legend-item"><div class="legend-dot sel"></div> Seleccionado</div>
+      <div class="fg"><label>Fecha *</label><input type="date" id="apptDate"/></div>
+      <div class="fg">
+        <label>Selecciona tu Horario *</label>
+        <div class="time-grid" id="timeGrid">
+          <div style="grid-column:1/-1;text-align:center;color:var(--c30);font-size:.8rem;padding:1rem;cursor:default">Elige una fecha para ver disponibilidad</div>
         </div>
-        <input type="hidden" id="f-slot" />
+        <input type="hidden" id="selTime"/>
+        <div class="slot-leg">
+          <div class="leg-item"><div class="leg-dot ld-a"></div>Disponible</div>
+          <div class="leg-item"><div class="leg-dot ld-s"></div>Seleccionado</div>
+          <div class="leg-item"><div class="leg-dot ld-t"></div>Ocupado</div>
+        </div>
       </div>
-
-      <div class="form-group">
-        <label for="f-notes">Notas Adicionales</label>
-        <textarea id="f-notes" placeholder="Alergias, preferencias o consultas especiales..."></textarea>
-      </div>
-
-      <button class="form-submit" id="submit-btn" type="button" onclick="submitBooking()">
-        Confirmar Reservación
-      </button>
-
-      <div class="alert success" id="alert-ok">
-        ✦ Tu cita ha sido confirmada. Recibirás un correo con los detalles de tu reservación.
-      </div>
-      <div class="alert error" id="alert-err">
-        Este horario ya no está disponible. Por favor selecciona otro.
-      </div>
+      <div class="fg"><label>Comentarios</label><textarea id="notes" placeholder="Cuéntanos brevemente tu consulta o expectativas…"></textarea></div>
+      <div class="form-msg" id="formMsg"></div>
+      <button class="btn-submit" id="submitBtn" onclick="submitAppt()"><span id="btnTxt">Confirmar Reserva</span></button>
+      <p class="form-note">🔒 Reservas gestionadas con Firebase Firestore · Datos cifrados y seguros</p>
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
-<footer id="contact">
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <span class="logo">Aureli<span>a</span></span>
-      <p>Centro Médico Spa de alta gama en Lima, Perú. Donde cada visita es el inicio de una nueva versión de ti.</p>
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="f-logo">Aurelia<em>.</em></div>
+      <p class="f-tagline">Centro Médico &amp; Spa de lujo en el corazón de San Isidro, Lima. Donde la ciencia y el bienestar se encuentran.</p>
     </div>
-    <div class="footer-col">
-      <h4>Servicios</h4>
-      <ul>
-        <li><a href="#services">Medicina Estética</a></li>
-        <li><a href="#services">Spa Sensorial</a></li>
-        <li><a href="#services">Nutrición Clínica</a></li>
-        <li><a href="#services">Dermatología</a></li>
-        <li><a href="#services">Terapia Holística</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contacto</h4>
-      <ul>
-        <li><a href="tel:+5112345678">+51 (1) 234-5678</a></li>
-        <li><a href="mailto:hola@aurelia.pe">hola@aurelia.pe</a></li>
-        <li><a href="#">Av. Principal 1420</a></li>
-        <li><a href="#">Lima, Perú</a></li>
-        <li><a href="#">Instagram</a></li>
-      </ul>
-    </div>
+    <div><div class="f-head">Navegación</div><ul class="f-links"><li><a href="#nosotros">Nosotros</a></li><li><a href="#servicios">Servicios</a></li><li><a href="#equipo">Equipo</a></li><li><a href="#citas">Reservar Cita</a></li></ul></div>
+    <div><div class="f-head">Servicios</div><ul class="f-links"><li><a href="#servicios">Medicina Estética</a></li><li><a href="#servicios">Tratamientos Faciales</a></li><li><a href="#servicios">Medicina Láser</a></li><li><a href="#servicios">Spa Corporal</a></li></ul></div>
+    <div><div class="f-head">Contacto</div><ul class="f-links"><li><a href="tel:+5112345678">+51 1 234-5678</a></li><li><a href="mailto:hola@aurelia.pe">hola@aurelia.pe</a></li><li><a href="#">Av. Javier Prado E. 1234</a></li><li><a href="#">San Isidro, Lima — Perú</a></li></ul></div>
   </div>
-  <div class="footer-bottom">
-    <p>© 2025 Aurelia · Centro Médico Spa. Todos los derechos reservados.</p>
-    <p>Diseñado con distinción · Lima, Perú</p>
+  <div class="footer-bot">
+    <p>© 2025 Aurelia Centro Médico &amp; Spa · Todos los derechos reservados</p>
+    <div class="socials"><a href="#" aria-label="Instagram">ig</a><a href="#" aria-label="Facebook">fb</a><a href="#" aria-label="TikTok">tk</a></div>
   </div>
 </footer>
 
-<!-- ══════════════════════════════════════════════
-     FIREBASE + BOOKING LOGIC
-     Reemplaza los valores de firebaseConfig con los
-     de tu proyecto en https://console.firebase.google.com
-     ══════════════════════════════════════════════ -->
+<!-- FIREBASE -->
 <script type="module">
-  // ── Firebase SDK ──
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, collection,
-    onSnapshot, serverTimestamp, runTransaction
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // ┌─────────────────────────────────────────────────────────────┐
-  // │  ⚙️  REEMPLAZA CON TU CONFIGURACIÓN DE FIREBASE             │
-  // └─────────────────────────────────────────────────────────────┘
-  const firebaseConfig = {
+  /* ────────────────────────────────────────────────
+     🔧 REEMPLAZA CON TUS CREDENCIALES DE FIREBASE
+     https://console.firebase.google.com
+  ──────────────────────────────────────────────── */
+  const cfg = {
     apiKey:            "TU_API_KEY",
     authDomain:        "tu-proyecto.firebaseapp.com",
-    projectId:         "tu-proyecto",
+    projectId:         "tu-proyecto-id",
     storageBucket:     "tu-proyecto.appspot.com",
     messagingSenderId: "000000000000",
-    appId:             "1:000000000000:web:xxxxxxxxxxxxxxxxxxxx"
+    appId:             "1:000000000000:web:abcdef1234567890"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  let db = null;
+  const DEMO = cfg.apiKey.includes("TU_");
+  try{ const app=initializeApp(cfg); db=getFirestore(app); }catch(e){}
 
-  // ── Horarios base ──
-  const TIME_SLOTS = [
-    "08:00","09:00","10:00","11:00",
-    "12:00","13:00","14:00","15:00",
-    "16:00","17:00","18:00","19:00"
-  ];
+  const SLOTS=["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30",
+               "12:00","12:30","14:00","14:30","15:00","15:30","16:00","16:30",
+               "17:00","17:30","18:00","18:30"];
+  let picked="";
 
-  let selectedSlot    = null;
-  let unsubscribeFn   = null;
-
-  // ── Render slots ──
-  function renderSlots(takenSlots) {
-    const grid = document.getElementById("slot-grid");
-    grid.innerHTML = "";
-
-    TIME_SLOTS.forEach(time => {
-      const btn = document.createElement("button");
-      btn.className = "slot" + (takenSlots.includes(time) ? " taken" : "");
-      btn.textContent = time;
-      btn.dataset.slot = time;
-      btn.type = "button";
-
-      if (!takenSlots.includes(time)) {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll(".slot.selected").forEach(s => s.classList.remove("selected"));
-          btn.classList.add("selected");
-          selectedSlot = time;
-          document.getElementById("f-slot").value = time;
-        });
-      }
-      grid.appendChild(btn);
+  async function renderSlots(date){
+    const g=document.getElementById("timeGrid");
+    g.innerHTML=SLOTS.map(s=>`<div class="ts loading" data-t="${s}">${s}</div>`).join("");
+    let taken=new Set();
+    if(!DEMO&&db){
+      try{
+        const sn=await getDocs(query(collection(db,"appointments"),where("date","==",date)));
+        sn.forEach(d=>taken.add(d.data().time));
+      }catch(e){console.warn(e)}
+    }
+    document.querySelectorAll(".ts").forEach(el=>{
+      el.classList.remove("loading");
+      if(taken.has(el.dataset.t)){el.classList.add("taken");el.title="No disponible";}
+      else el.addEventListener("click",()=>pick(el.dataset.t));
     });
   }
-
-  // ── Listen for changes on a date ──
-  function listenDate(dateStr) {
-    if (unsubscribeFn) unsubscribeFn();
-    selectedSlot = null;
-    document.getElementById("f-slot").value = "";
-
-    const docRef = doc(db, "citas_por_dia", dateStr);
-
-    unsubscribeFn = onSnapshot(docRef, snap => {
-      const taken = snap.exists() ? (snap.data().ocupados || []) : [];
-      renderSlots(taken);
-    }, err => {
-      console.warn("Firebase listener error:", err);
-      // Demo mode: render all slots available
-      renderSlots([]);
-    });
+  function pick(t){
+    picked=t; document.getElementById("selTime").value=t;
+    document.querySelectorAll(".ts:not(.taken)").forEach(el=>el.classList.toggle("sel",el.dataset.t===t));
   }
-
-  // ── Date change ──
-  const dateInput = document.getElementById("f-date");
-
-  // Set min date to today
-  const today = new Date().toISOString().split("T")[0];
-  dateInput.min = today;
-
-  dateInput.addEventListener("change", () => {
-    const dateStr = dateInput.value;
-    if (!dateStr) return;
-    document.getElementById("slots-loading").style.display = "none";
-    document.getElementById("slot-grid").style.display     = "grid";
-    document.getElementById("slots-legend").style.display  = "flex";
-    listenDate(dateStr);
+  document.getElementById("apptDate").addEventListener("change",e=>{
+    if(e.target.value){picked="";document.getElementById("selTime").value="";renderSlots(e.target.value);}
   });
+  const tom=new Date();tom.setDate(tom.getDate()+1);
+  document.getElementById("apptDate").min=tom.toISOString().split("T")[0];
 
-  // ── Submit ──
-  window.submitBooking = async function () {
-    const name    = document.getElementById("f-name").value.trim();
-    const last    = document.getElementById("f-last").value.trim();
-    const email   = document.getElementById("f-email").value.trim();
-    const phone   = document.getElementById("f-phone").value.trim();
-    const service = document.getElementById("f-service").value;
-    const date    = document.getElementById("f-date").value;
-    const notes   = document.getElementById("f-notes").value.trim();
-    const slot    = document.getElementById("f-slot").value;
-
-    const alertOk  = document.getElementById("alert-ok");
-    const alertErr = document.getElementById("alert-err");
-    const btn      = document.getElementById("submit-btn");
-
-    alertOk.classList.remove("show");
-    alertErr.classList.remove("show");
-
-    if (!name || !last || !email || !service || !date || !slot) {
-      alertErr.textContent = "Por favor completa todos los campos obligatorios y selecciona un horario.";
-      alertErr.classList.add("show");
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "Procesando...";
-
-    try {
-      const dayRef = doc(db, "citas_por_dia", date);
-
-      await runTransaction(db, async tx => {
-        const daySnap = await tx.get(dayRef);
-        const ocupados = daySnap.exists() ? (daySnap.data().ocupados || []) : [];
-
-        if (ocupados.includes(slot)) {
-          throw new Error("SLOT_TAKEN");
+  window.submitAppt=async function(){
+    const btn=document.getElementById("submitBtn");
+    const msg=document.getElementById("formMsg");
+    const v=id=>document.getElementById(id).value.trim();
+    const fn=v("fname"),ln=v("lname"),em=v("email"),ph=v("phone"),sv=v("service"),dt=v("apptDate"),nt=v("notes");
+    msg.className="form-msg";msg.textContent="";
+    if(!fn||!ln||!em||!ph||!sv||!dt||!picked){msg.textContent="Por favor completa todos los campos y selecciona un horario.";msg.className="form-msg err";return;}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){msg.textContent="Ingresa un correo electrónico válido.";msg.className="form-msg err";return;}
+    btn.disabled=true;btn.innerHTML=`<div class="spinner"></div><span>Procesando…</span>`;
+    try{
+      if(!DEMO&&db){
+        const chk=await getDocs(query(collection(db,"appointments"),where("date","==",dt),where("time","==",picked)));
+        if(!chk.empty){
+          const sl=document.querySelector(`[data-t="${picked}"]`);
+          if(sl){sl.classList.add("taken");sl.classList.remove("sel");}
+          picked="";document.getElementById("selTime").value="";
+          throw new Error("ocupado");
         }
-
-        // Save appointment
-        const citaRef = doc(collection(db, "citas"));
-        tx.set(citaRef, {
-          nombre: name + " " + last,
-          email, phone, service, date, slot, notes,
-          creado: serverTimestamp()
-        });
-
-        // Mark slot as taken
-        tx.set(dayRef, { ocupados: [...ocupados, slot] }, { merge: true });
-      });
-
-      alertOk.classList.add("show");
-      // Reset form
-      ["f-name","f-last","f-email","f-phone","f-notes"].forEach(id => document.getElementById(id).value = "");
-      document.getElementById("f-service").value = "";
-      document.getElementById("f-date").value    = "";
-      document.getElementById("f-slot").value    = "";
-      selectedSlot = null;
-      document.getElementById("slot-grid").style.display    = "none";
-      document.getElementById("slots-legend").style.display = "none";
-      document.getElementById("slots-loading").style.display = "block";
-      document.getElementById("slots-loading").textContent   = "Selecciona una fecha para ver los horarios disponibles.";
-
-    } catch (err) {
-      if (err.message === "SLOT_TAKEN") {
-        alertErr.textContent = "Este horario ya fue reservado por otra persona. Por favor elige otro.";
+        await addDoc(collection(db,"appointments"),{firstName:fn,lastName:ln,email:em,phone:ph,service:sv,date:dt,time:picked,notes:nt,createdAt:new Date().toISOString()});
+        msg.textContent=`✦ ¡Cita confirmada! ${dt} a las ${picked}. Te escribiremos a ${em}.`;
+        msg.className="form-msg ok";
+        ["fname","lname","email","phone","notes"].forEach(id=>document.getElementById(id).value="");
+        document.getElementById("service").value="";document.getElementById("apptDate").value="";
+        document.getElementById("selTime").value="";picked="";
+        document.getElementById("timeGrid").innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--c30);font-size:.8rem;padding:1rem;cursor:default">Elige una fecha para ver disponibilidad</div>`;
       } else {
-        alertErr.textContent = "Ocurrió un error. Verifica tu conexión e intenta de nuevo.";
-        console.error(err);
+        msg.textContent=`⚠️ Modo demo — conecta Firebase con tus credenciales reales para activar reservas en tiempo real. (La reserva del ${dt} a las ${picked} quedaría registrada correctamente.)`;
+        msg.className="form-msg err";
       }
-      alertErr.classList.add("show");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Confirmar Reservación";
+    }catch(e){
+      msg.textContent=e.message==="ocupado"?"⚠️ Ese horario acaba de ser reservado. Por favor elige otro.":"Error al procesar la reserva. Intenta nuevamente o llámanos.";
+      msg.className="form-msg err";
     }
+    btn.disabled=false;btn.innerHTML=`<span id="btnTxt">Confirmar Reserva</span>`;
   };
 </script>
 
-<!-- ── UI Scripts ── -->
+<!-- UI -->
 <script>
-  // Custom cursor
-  const cursor     = document.getElementById("cursor");
-  const cursorRing = document.getElementById("cursor-ring");
-  document.addEventListener("mousemove", e => {
-    cursor.style.left     = e.clientX + "px";
-    cursor.style.top      = e.clientY + "px";
-    cursorRing.style.left = e.clientX + "px";
-    cursorRing.style.top  = e.clientY + "px";
-  });
-
-  // Nav scroll
-  const nav = document.getElementById("mainNav");
-  window.addEventListener("scroll", () => {
-    nav.classList.toggle("scrolled", window.scrollY > 60);
-  });
-
-  // Reveal on scroll
-  const reveals = document.querySelectorAll(".reveal");
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); });
-  }, { threshold: 0.12 });
-  reveals.forEach(el => observer.observe(el));
+  const ham=document.getElementById("ham"),nl=document.getElementById("navLinks");
+  ham.addEventListener("click",()=>{ham.classList.toggle("open");nl.classList.toggle("open");});
+  nl.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{ham.classList.remove("open");nl.classList.remove("open");}));
+  window.addEventListener("scroll",()=>document.getElementById("navbar").classList.toggle("scrolled",scrollY>30));
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add("up");}),{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
 </script>
 </body>
 </html>
